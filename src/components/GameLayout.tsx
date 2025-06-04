@@ -1,7 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
 import HomeScreen from './HomeScreen';
-import TopicSelection from './TopicSelection';
 import DifficultySelection from './DifficultySelection';
 import PuzzleGame from './PuzzleGame';
 
