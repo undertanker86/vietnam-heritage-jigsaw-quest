@@ -58,27 +58,17 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onTopicSelect, bestTimes, onLog
           <div className="text-center">
             <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 relative">
               <div className="text-white text-4xl">🏛️</div>
-              {user?.hasAdvantage && (
-                <div className="absolute -top-2 -right-2 bg-yellow-500 rounded-full p-1">
-                  <Crown className="w-4 h-4 text-white" />
-                </div>
-              )}
+              <div className="absolute -top-2 -right-2 bg-yellow-500 rounded-full p-1">
+                <Crown className="w-4 h-4 text-white" />
+              </div>
             </div>
             <h2 className="text-3xl font-bold text-gray-800 mb-4">
               History
-              {user?.hasAdvantage && <span className="text-yellow-500 ml-2">👑</span>}
+              <span className="text-yellow-500 ml-2">👑</span>
             </h2>
             <p className="text-gray-600 leading-relaxed">
-              {user?.hasAdvantage 
-                ? "Explore Vietnam's historical campaigns with milestone puzzles and certificates"
-                : "Explore Vietnam's fascinating historical landmarks, legendary figures, and pivotal moments"
-              }
+              Explore Vietnam's historical campaigns with milestone puzzles and certificates
             </p>
-            {!user?.hasAdvantage && (
-              <div className="mt-4 text-sm text-yellow-600 font-medium">
-                Upgrade for Historical Campaigns
-              </div>
-            )}
           </div>
           <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         </div>

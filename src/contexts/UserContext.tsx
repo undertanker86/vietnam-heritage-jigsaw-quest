@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export interface User {
@@ -34,7 +33,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Load user from localStorage on app start
     const savedUser = localStorage.getItem('vietnam-puzzle-user');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      const userData = JSON.parse(savedUser);
+      // Always give users Advantage access
+      setUser({ ...userData, hasAdvantage: true });
     }
   }, []);
 
@@ -44,7 +45,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const newUser: User = {
         id: Date.now().toString(),
         email,
-        hasAdvantage: false
+        hasAdvantage: true // Always give Advantage access
       };
       setUser(newUser);
       localStorage.setItem('vietnam-puzzle-user', JSON.stringify(newUser));
@@ -60,7 +61,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: Date.now().toString(),
         email,
         name,
-        hasAdvantage: false
+        hasAdvantage: true // Always give Advantage access
       };
       setUser(newUser);
       localStorage.setItem('vietnam-puzzle-user', JSON.stringify(newUser));
@@ -75,13 +76,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const upgradeToAdvantage = async (): Promise<boolean> => {
-    if (user) {
-      const upgradedUser = { ...user, hasAdvantage: true };
-      setUser(upgradedUser);
-      localStorage.setItem('vietnam-puzzle-user', JSON.stringify(upgradedUser));
-      return true;
-    }
-    return false;
+    // No longer needed, but keep for compatibility
+    return true;
   };
 
   return (

@@ -47,12 +47,9 @@ const GameLayoutInner = () => {
   const handleTopicSelect = (topic: GameTopic) => {
     setSelectedTopic(topic);
     
-    // If history topic and user has advantage, go to campaigns
-    if (topic === 'history' && user?.hasAdvantage) {
+    // If history topic, go directly to campaigns (no upgrade needed)
+    if (topic === 'history') {
       setCurrentScreen('campaigns');
-    } else if (topic === 'history' && !user?.hasAdvantage) {
-      // Show upgrade modal for history
-      setAuthModal({ isOpen: true, mode: 'upgrade' });
     } else {
       // Culture topic goes to normal difficulty selection
       setCurrentScreen('difficulty');
@@ -135,8 +132,10 @@ const GameLayoutInner = () => {
   };
 
   const handleUpgrade = () => {
+    // No longer needed, but keep for compatibility
     if (user) {
-      setAuthModal({ isOpen: true, mode: 'upgrade' });
+      // Just close any modal that might be open
+      setAuthModal({ ...authModal, isOpen: false });
     } else {
       setAuthModal({ isOpen: true, mode: 'register' });
     }
