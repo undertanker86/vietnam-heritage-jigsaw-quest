@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { GameTopic, DifficultyLevel } from './GameLayout';
 import { ArrowLeft, Home, Eye } from 'lucide-react';
@@ -16,6 +15,7 @@ interface PuzzlePiece {
 interface PuzzleGameProps {
   topic: GameTopic;
   difficulty: DifficultyLevel;
+  milestoneId?: string | null;
   onBack: () => void;
   onComplete: (timeInSeconds: number) => void;
   onHome: () => void;
@@ -25,6 +25,7 @@ interface PuzzleGameProps {
 const PuzzleGame: React.FC<PuzzleGameProps> = ({
   topic,
   difficulty,
+  milestoneId,
   onBack,
   onComplete,
   onHome,
