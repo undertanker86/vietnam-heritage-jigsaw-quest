@@ -1,13 +1,17 @@
 
 import React, { useState } from 'react';
 import { BestTimes, GameTopic } from './GameLayout';
+import { User } from '../contexts/UserContext';
+import { LogIn, Crown } from 'lucide-react';
 
 interface HomeScreenProps {
   onTopicSelect: (topic: GameTopic) => void;
   bestTimes: BestTimes;
+  onLogin: () => void;
+  user: User | null;
 }
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ onTopicSelect, bestTimes }) => {
+const HomeScreen: React.FC<HomeScreenProps> = ({ onTopicSelect, bestTimes, onLogin, user }) => {
   const [showBestTimes, setShowBestTimes] = useState(false);
 
   const formatTime = (seconds: number): string => {
@@ -23,6 +27,19 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onTopicSelect, bestTimes }) => 
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6">
+      {/* Login Button */}
+      {!user && (
+        <div className="absolute top-6 right-6">
+          <button
+            onClick={onLogin}
+            className="flex items-center gap-2 bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+          >
+            <LogIn className="w-4 h-4" />
+            <span>Sign In</span>
+          </button>
+        </div>
+      )}
+
       <div className="text-center mb-12 animate-gentle-float">
         <h1 className="text-6xl md:text-7xl font-bold vietnam-title mb-4">
           Vietnam Puzzle Heritage
@@ -39,13 +56,29 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ onTopicSelect, bestTimes }) => 
           className="group relative bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-105"
         >
           <div className="text-center">
-            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+            <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-red-500 to-red-700 rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 relative">
               <div className="text-white text-4xl">🏛️</div>
+              {user?.hasAdvantage && (
+                <div className="absolute -top-2 -right-2 bg-yellow-500 rounded-full p-1">
+                  <Crown className="w-4 h-4 text-white" />
+                </div>
+              )}
             </div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">History</h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">
+              History
+              {user?.hasAdvantage && <span className="text-yellow-500 ml-2">👑</span>}
+            </h2>
             <p className="text-gray-600 leading-relaxed">
-              Explore Vietnam's fascinating historical landmarks, legendary figures, and pivotal moments that shaped the nation
+              {user?.hasAdvantage 
+                ? "Explore Vietnam's historical campaigns with milestone puzzles and certificates"
+                : "Explore Vietnam's fascinating historical landmarks, legendary figures, and pivotal moments"
+              }
             </p>
+            {!user?.hasAdvantage && (
+              <div className="mt-4 text-sm text-yellow-600 font-medium">
+                Upgrade for Historical Campaigns
+              </div>
+            )}
           </div>
           <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-transparent rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         </div>

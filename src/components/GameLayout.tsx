@@ -2,19 +2,34 @@ import React, { useState, useEffect } from 'react';
 import HomeScreen from './HomeScreen';
 import DifficultySelection from './DifficultySelection';
 import PuzzleGame from './PuzzleGame';
+import HistoricalCampaigns from './HistoricalCampaigns';
+import MilestoneSelection from './MilestoneSelection';
+import AuthModal from './AuthModal';
+import { UserProvider, useUser } from '../contexts/UserContext';
+import { markMilestoneCompleted } from '../data/campaigns';
 
 export type GameTopic = 'history' | 'culture';
 export type DifficultyLevel = 2 | 3 | 4;
 
 export interface BestTimes {
-  [key: string]: number; // key format: "topic-difficulty" e.g., "history-2"
+  [key: string]: number;
 }
 
-const GameLayout = () => {
-  const [currentScreen, setCurrentScreen] = useState<'home' | 'topic' | 'difficulty' | 'puzzle'>('home');
+type GameScreen = 'home' | 'topic' | 'difficulty' | 'puzzle' | 'campaigns' | 'milestones';
+
+const GameLayoutInner = () => {
+  const [currentScreen, setCurrentScreen] = useState<GameScreen>('home');
   const [selectedTopic, setSelectedTopic] = useState<GameTopic | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel | null>(null);
+  const [selectedCampaign, setSelectedCampaign] = useState<string | null>(null);
+  const [selectedMilestone, setSelectedMilestone] = useState<string | null>(null);
   const [bestTimes, setBestTimes] = useState<BestTimes>({});
+  const [authModal, setAuthModal] = useState<{ isOpen: boolean; mode: 'login' | 'register' | 'upgrade' }>({
+    isOpen: false,
+    mode: 'login'
+  });
+
+  const { user } = useUser();
 
   // Load best times from localStorage on component mount
   useEffect(() => {
@@ -31,10 +46,31 @@ const GameLayout = () => {
 
   const handleTopicSelect = (topic: GameTopic) => {
     setSelectedTopic(topic);
-    setCurrentScreen('difficulty');
+    
+    // If history topic and user has advantage, go to campaigns
+    if (topic === 'history' && user?.hasAdvantage) {
+      setCurrentScreen('campaigns');
+    } else if (topic === 'history' && !user?.hasAdvantage) {
+      // Show upgrade modal for history
+      setAuthModal({ isOpen: true, mode: 'upgrade' });
+    } else {
+      // Culture topic goes to normal difficulty selection
+      setCurrentScreen('difficulty');
+    }
   };
 
   const handleDifficultySelect = (difficulty: DifficultyLevel) => {
+    setSelectedDifficulty(difficulty);
+    setCurrentScreen('puzzle');
+  };
+
+  const handleCampaignSelect = (campaignId: string) => {
+    setSelectedCampaign(campaignId);
+    setCurrentScreen('milestones');
+  };
+
+  const handleMilestoneSelect = (milestoneId: string, difficulty: DifficultyLevel) => {
+    setSelectedMilestone(milestoneId);
     setSelectedDifficulty(difficulty);
     setCurrentScreen('puzzle');
   };
@@ -43,6 +79,8 @@ const GameLayout = () => {
     setCurrentScreen('home');
     setSelectedTopic(null);
     setSelectedDifficulty(null);
+    setSelectedCampaign(null);
+    setSelectedMilestone(null);
   };
 
   const handleBackToDifficulty = () => {
@@ -50,9 +88,31 @@ const GameLayout = () => {
     setSelectedDifficulty(null);
   };
 
+  const handleBackToCampaigns = () => {
+    setCurrentScreen('campaigns');
+    setSelectedCampaign(null);
+    setSelectedMilestone(null);
+    setSelectedDifficulty(null);
+  };
+
+  const handleBackToMilestones = () => {
+    setCurrentScreen('milestones');
+    setSelectedMilestone(null);
+    setSelectedDifficulty(null);
+  };
+
   const handlePuzzleComplete = (timeInSeconds: number) => {
+    // Handle milestone completion for advantage users
+    if (selectedMilestone) {
+      markMilestoneCompleted(selectedMilestone);
+    }
+
+    // Handle regular best times
     if (selectedTopic && selectedDifficulty) {
-      const key = `${selectedTopic}-${selectedDifficulty}`;
+      const key = selectedMilestone 
+        ? `milestone-${selectedMilestone}-${selectedDifficulty}`
+        : `${selectedTopic}-${selectedDifficulty}`;
+      
       const currentBest = bestTimes[key];
       
       if (!currentBest || timeInSeconds < currentBest) {
@@ -66,18 +126,57 @@ const GameLayout = () => {
 
   const getCurrentBestTime = (): number | null => {
     if (selectedTopic && selectedDifficulty) {
-      const key = `${selectedTopic}-${selectedDifficulty}`;
+      const key = selectedMilestone 
+        ? `milestone-${selectedMilestone}-${selectedDifficulty}`
+        : `${selectedTopic}-${selectedDifficulty}`;
       return bestTimes[key] || null;
     }
     return null;
   };
 
+  const handleUpgrade = () => {
+    if (user) {
+      setAuthModal({ isOpen: true, mode: 'upgrade' });
+    } else {
+      setAuthModal({ isOpen: true, mode: 'register' });
+    }
+  };
+
+  const getBackHandler = () => {
+    switch (currentScreen) {
+      case 'difficulty':
+        return handleBackToHome;
+      case 'campaigns':
+        return handleBackToHome;
+      case 'milestones':
+        return handleBackToCampaigns;
+      case 'puzzle':
+        if (selectedMilestone) return handleBackToMilestones;
+        return handleBackToDifficulty;
+      default:
+        return handleBackToHome;
+    }
+  };
+
   return (
     <div className="min-h-screen watercolor-bg">
+      {/* User Menu */}
+      {user && (
+        <div className="absolute top-6 right-6 z-10">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-lg">
+            <span className="text-sm text-gray-600">
+              {user.name || user.email} {user.hasAdvantage && '👑'}
+            </span>
+          </div>
+        </div>
+      )}
+
       {currentScreen === 'home' && (
         <HomeScreen 
           onTopicSelect={handleTopicSelect}
           bestTimes={bestTimes}
+          onLogin={() => setAuthModal({ isOpen: true, mode: 'login' })}
+          user={user}
         />
       )}
       
@@ -85,8 +184,24 @@ const GameLayout = () => {
         <DifficultySelection
           topic={selectedTopic}
           onDifficultySelect={handleDifficultySelect}
-          onBack={handleBackToHome}
+          onBack={getBackHandler()}
           bestTimes={bestTimes}
+        />
+      )}
+
+      {currentScreen === 'campaigns' && (
+        <HistoricalCampaigns
+          onCampaignSelect={handleCampaignSelect}
+          onBack={getBackHandler()}
+          onUpgrade={handleUpgrade}
+        />
+      )}
+
+      {currentScreen === 'milestones' && selectedCampaign && (
+        <MilestoneSelection
+          campaignId={selectedCampaign}
+          onMilestoneSelect={handleMilestoneSelect}
+          onBack={getBackHandler()}
         />
       )}
       
@@ -94,13 +209,28 @@ const GameLayout = () => {
         <PuzzleGame
           topic={selectedTopic}
           difficulty={selectedDifficulty}
-          onBack={handleBackToDifficulty}
+          milestoneId={selectedMilestone}
+          onBack={getBackHandler()}
           onComplete={handlePuzzleComplete}
           onHome={handleBackToHome}
           currentBestTime={getCurrentBestTime()}
         />
       )}
+
+      <AuthModal
+        isOpen={authModal.isOpen}
+        mode={authModal.mode}
+        onClose={() => setAuthModal({ ...authModal, isOpen: false })}
+      />
     </div>
+  );
+};
+
+const GameLayout = () => {
+  return (
+    <UserProvider>
+      <GameLayoutInner />
+    </UserProvider>
   );
 };
 
